@@ -1,32 +1,65 @@
 <?php
 
+/**
+ * Created by Reliese Model.
+ */
+
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+/**
+ * Class User
+ * 
+ * @property int $id
+ * @property string $name
+ * @property string $email
+ * @property Carbon|null $email_verified_at
+ * @property string $password
+ * @property string $role
+ * @property Carbon|null $cooldown_join_until
+ * @property string|null $remember_token
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * 
+ * @property Collection|Invitation[] $invitations
+ * @property Collection|Team[] $teams
+ *
+ * @package App\Models
+ */
+class User extends Model
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+	protected $table = 'users';
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
+	protected $casts = [
+		'email_verified_at' => 'datetime',
+		'cooldown_join_until' => 'datetime'
+	];
+
+	protected $hidden = [
+		'password',
+		'remember_token'
+	];
+
+	protected $fillable = [
+		'name',
+		'email',
+		'email_verified_at',
+		'password',
+		'role',
+		'cooldown_join_until',
+		'remember_token'
+	];
+
+	public function invitations()
+	{
+		return $this->hasMany(Invitation::class);
+	}
+
+	public function teams()
+	{
+		return $this->hasMany(Team::class, 'leader_id');
+	}
 }
