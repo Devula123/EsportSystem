@@ -83,4 +83,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/teams/{team}/invitations', [InvitationController::class, 'store'])->name('invitations.store');
     Route::post('/invitations/{invitation}/accept', [InvitationController::class, 'accept'])->name('invitations.accept');
     Route::post('/invitations/{invitation}/decline', [InvitationController::class, 'decline'])->name('invitations.decline');
+
+    // Statystyki i rankingi
+    Route::get('/ranking', [\App\Http\Controllers\StatsController::class, 'ranking'])->name('stats.ranking');
+    Route::get('/players/{user}/stats', [\App\Http\Controllers\StatsController::class, 'playerStats'])->name('stats.player');
+    Route::get('/teams/{team}/stats', [\App\Http\Controllers\StatsController::class, 'teamStats'])->name('stats.team');
 });

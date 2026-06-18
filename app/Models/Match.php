@@ -60,6 +60,21 @@ class Match extends Model
 		return $this->belongsTo(Team::class, 'winner_id');
 	}
 
+	public function homeTeam()
+	{
+		return $this->belongsTo(Team::class, 'home_team_id');
+	}
+
+	public function awayTeam()
+	{
+		return $this->belongsTo(Team::class, 'away_team_id');
+	}
+
+	public function winner()
+	{
+		return $this->belongsTo(Team::class, 'winner_id');
+	}
+
 	public function tournament()
 	{
 		return $this->belongsTo(Tournament::class);
