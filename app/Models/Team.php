@@ -42,4 +42,63 @@ class Team extends Model
     {
         return $this->belongsToMany(Tournament::class, 'tournament_team');
     }
+
+    public function getWinRate(): float
+    {
+        $histories = MatchHistory::where('home_team_id', $this->id)
+            ->orWhere('away_team_id', $this->id)
+            ->get();
+
+        $total = $histories->count();
+        if ($total === 0) {
+            return 0.0;
+        }
+
+        $wins = $histories->where('winner_team_id', $this->id)->count();
+        return round(($wins / $total) * 100, 1);
+    }
+
+    public function getStreak(int $limit = 5): string
+    {
+        $histories = MatchHistory::where('home_team_id', $this->id)
+            ->orWhere('away_team_id', $this->id)
+            ->orderBy('played_at', 'desc')
+            ->orderBy('id', 'desc')
+            ->limit($limit)
+            ->get();
+
+        if ($histories->isEmpty()) {
+            return 'N/A';
+        }
+
+        $streaks = [];
+        foreach ($histories->reverse() as $history) {
+            $streaks[] = ($history->winner_team_id === $this->id) ? 'W' : 'L';
+        }
+
+        return implode('-', $streaks);
+    }
+
+    public function getAveragePoints(): float
+    {
+        $histories = MatchHistory::where('home_team_id', $this->id)
+            ->orWhere('away_team_id', $this->id)
+            ->get();
+
+        $total = $histories->count();
+        if ($total === 0) {
+            return 0.0;
+        }
+
+        $totalPoints = 0;
+        foreach ($histories as $history) {
+            if ($history->home_team_id === $this->id) {
+                $totalPoints += $history->home_score;
+            } else {
+                $totalPoints += $history->away_score;
+            }
+        }
+
+        return round($totalPoints / $total, 1);
+    }
 }
