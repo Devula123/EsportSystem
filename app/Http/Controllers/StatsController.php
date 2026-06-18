@@ -2,39 +2,30 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MatchHistory;
-use App\Models\MatchHistoryPlayer;
 use App\Models\Team;
 use App\Models\User;
+use App\Repositories\Contracts\TeamRepositoryInterface;
+use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class StatsController extends Controller
 {
+    protected TeamRepositoryInterface $teamRepository;
+    protected UserRepositoryInterface $userRepository;
+
+    public function __construct(
+        TeamRepositoryInterface $teamRepository,
+        UserRepositoryInterface $userRepository
+    ) {
+        $this->teamRepository = $teamRepository;
+        $this->userRepository = $userRepository;
+    }
+
     public function ranking()
     {
-        $teams = Team::all()->map(function ($team) {
-            return [
-                'id' => $team->id,
-                'name' => $team->name,
-                'logo_url' => $team->logo_url,
-                'win_rate' => $team->getWinRate(),
-                'streak' => $team->getStreak(),
-                'average_points' => $team->getAveragePoints(),
-            ];
-        })->sortByDesc('win_rate')->values();
-
-        $players = User::where('role', 'user')->get()->map(function ($player) {
-            return [
-                'id' => $player->id,
-                'name' => $player->name,
-                'rating' => $player->rating ?? 'N/A',
-                'team_name' => $player->team ? $player->team->name : 'No Team',
-                'win_rate' => $player->getWinRate(),
-                'streak' => $player->getStreak(),
-                'average_points' => $player->getAveragePoints(),
-            ];
-        })->sortByDesc('win_rate')->values();
+        $teams = $this->teamRepository->getTeamsWithStats();
+        $players = $this->userRepository->getPlayersWithStats();
 
         return Inertia::render('Stats/Ranking', [
             'teams' => $teams,
@@ -50,24 +41,7 @@ class StatsController extends Controller
             'average_points' => $user->getAveragePoints(),
         ];
 
-        $history = MatchHistoryPlayer::where('user_id', $user->id)
-            ->with('matchHistory')
-            ->get()
-            ->map(function ($playerRecord) {
-                $historyRecord = $playerRecord->matchHistory;
-                if (!$historyRecord) return null;
-
-                return [
-                    'id' => $historyRecord->id,
-                    'tournament_name' => $historyRecord->tournament_name,
-                    'home_team_name' => $historyRecord->home_team_name,
-                    'away_team_name' => $historyRecord->away_team_name,
-                    'home_score' => $historyRecord->home_score,
-                    'away_score' => $historyRecord->away_score,
-                    'played_at' => $historyRecord->played_at ? $historyRecord->played_at->toDateTimeString() : 'N/A',
-                    'result' => ($historyRecord->winner_team_id === $playerRecord->team_id) ? 'W' : 'L',
-                ];
-            })->filter()->values();
+        $history = $this->userRepository->getPlayerMatchHistory($user);
 
         return Inertia::render('Stats/PlayerProfile', [
             'player' => [
@@ -89,23 +63,7 @@ class StatsController extends Controller
             'average_points' => $team->getAveragePoints(),
         ];
 
-        $history = MatchHistory::where('home_team_id', $team->id)
-            ->orWhere('away_team_id', $team->id)
-            ->orderBy('played_at', 'desc')
-            ->orderBy('id', 'desc')
-            ->get()
-            ->map(function ($historyRecord) use ($team) {
-                return [
-                    'id' => $historyRecord->id,
-                    'tournament_name' => $historyRecord->tournament_name,
-                    'home_team_name' => $historyRecord->home_team_name,
-                    'away_team_name' => $historyRecord->away_team_name,
-                    'home_score' => $historyRecord->home_score,
-                    'away_score' => $historyRecord->away_score,
-                    'played_at' => $historyRecord->played_at ? $historyRecord->played_at->toDateTimeString() : 'N/A',
-                    'result' => ($historyRecord->winner_team_id === $team->id) ? 'W' : 'L',
-                ];
-            });
+        $history = $this->teamRepository->getTeamMatchHistory($team);
 
         return Inertia::render('Stats/TeamProfile', [
             'team' => [
