@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreTournamentRequest;
 use App\Models\Team;
 use App\Models\Tournament;
 use App\Services\TournamentService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class TournamentController extends Controller
 {
@@ -17,16 +17,9 @@ class TournamentController extends Controller
         $this->tournamentService = $tournamentService;
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreTournamentRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'game_name' => 'required|string|max:255',
-            'max_teams' => 'required|integer|min:2',
-            'start_date' => 'required|date',
-        ]);
-
-        $tournament = $this->tournamentService->proposeTournament($validated);
+        $tournament = $this->tournamentService->proposeTournament($request->validated());
 
         return response()->json([
             'message' => 'Wniosek o utworzenie turnieju został zgłoszony.',
@@ -36,12 +29,7 @@ class TournamentController extends Controller
 
     public function join(Tournament $tournament): JsonResponse
     {
-        $user = auth()->user();
-        if (!$user) {
-            return response()->json(['message' => 'Niezalogowany użytkownik.'], 401);
-        }
-
-        $team = Team::where('leader_id', $user->id)->first();
+        $team = Team::where('leader_id', auth()->id())->first();
         if (!$team) {
             return response()->json([
                 'message' => 'Tylko lider drużyny może zapisać ją do turnieju.'
