@@ -27,10 +27,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/tournaments/{tournament}/join', [\App\Http\Controllers\TournamentController::class, 'join'])->name('tournaments.join');
     Route::post('/tournaments/{tournament}/start', [\App\Http\Controllers\TournamentController::class, 'start'])->name('tournaments.start');
 
+    Route::post('/invitations', [\App\Http\Controllers\InvitationController::class, 'store'])->name('invitations.store');
+    Route::post('/invitations/{invitation}/accept', [\App\Http\Controllers\InvitationController::class, 'accept'])->name('invitations.accept');
+    Route::post('/invitations/{invitation}/decline', [\App\Http\Controllers\InvitationController::class, 'decline'])->name('invitations.decline');
+
     Route::middleware(\App\Http\Middleware\EnsureUserIsAdmin::class)->group(function () {
         Route::get('/admin/tournaments', [\App\Http\Controllers\AdminTournamentController::class, 'index'])->name('admin.tournaments.index');
         Route::post('/admin/tournaments/{tournament}/approve', [\App\Http\Controllers\AdminTournamentController::class, 'approve'])->name('admin.tournaments.approve');
         Route::post('/admin/tournaments/{tournament}/reject', [\App\Http\Controllers\AdminTournamentController::class, 'reject'])->name('admin.tournaments.reject');
+        Route::post('/matches/{match}/score', [\App\Http\Controllers\MatchController::class, 'recordScore'])->name('admin.matches.recordScore');
     });
 });
 

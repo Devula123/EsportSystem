@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTournamentRequest;
-use App\Models\Team;
 use App\Models\Tournament;
 use App\Services\TournamentService;
 use Illuminate\Http\JsonResponse;
@@ -29,14 +28,7 @@ class TournamentController extends Controller
 
     public function join(Tournament $tournament): JsonResponse
     {
-        $team = Team::where('leader_id', auth()->id())->first();
-        if (!$team) {
-            return response()->json([
-                'message' => 'Tylko lider drużyny może zapisać ją do turnieju.'
-            ], 403);
-        }
-
-        $this->tournamentService->registerTeam($tournament, $team);
+        $this->tournamentService->registerTeamFromUser($tournament, auth()->user());
 
         return response()->json([
             'message' => 'Drużyna została pomyślnie zapisana do turnieju.',

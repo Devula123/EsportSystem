@@ -17,7 +17,7 @@ class AdminTournamentController extends Controller
 
     public function index(): JsonResponse
     {
-        $pendingTournaments = Tournament::where('status', 'pending_approval')->get();
+        $pendingTournaments = $this->tournamentService->getPendingTournaments();
 
         return response()->json([
             'pending_tournaments' => $pendingTournaments,
